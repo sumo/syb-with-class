@@ -42,7 +42,7 @@ instance Sat (ctx Bool) =>
   gunfold _ _ z c  = case constrIndex c of
                        1 -> z False
                        2 -> z True
-                       _ -> error "gunfold"
+                       _ -> error "gunfold Bool"
   dataTypeOf _ _ = boolDataType
 
 
@@ -57,7 +57,7 @@ instance Sat (ctx Char) =>
   toConstr _ x = mkStringConstr charType [x]
   gunfold _ _ z c = case constrRep c of
                       (StringConstr [x]) -> z x
-                      _ -> error "gunfold"
+                      _ -> error "gunfold Char"
   dataTypeOf _ _ = charType
 
 
@@ -72,7 +72,7 @@ instance Sat (ctx Float) =>
   toConstr _ x = mkFloatConstr floatType (realToFrac x)
   gunfold _ _ z c = case constrRep c of
                       (FloatConstr x) -> z (realToFrac x)
-                      _ -> error "gunfold"
+                      _ -> error "gunfold Float"
   dataTypeOf _ _ = floatType
 
 
@@ -87,7 +87,7 @@ instance Sat (ctx Double) =>
   toConstr _ = mkFloatConstr floatType
   gunfold _ _ z c = case constrRep c of
                       (FloatConstr x) -> z x
-                      _ -> error "gunfold"
+                      _ -> error "gunfold Double"
   dataTypeOf _ _ = doubleType
 
 
@@ -102,7 +102,7 @@ instance Sat (ctx Int) =>
   toConstr _ x = mkIntConstr intType (fromIntegral x)
   gunfold _ _ z c = case constrRep c of
                       (IntConstr x) -> z (fromIntegral x)
-                      _ -> error "gunfold"
+                      _ -> error "gunfold Int"
   dataTypeOf _ _ = intType
 
 
@@ -117,7 +117,7 @@ instance Sat (ctx Integer) =>
   toConstr _ = mkIntConstr integerType
   gunfold _ _ z c = case constrRep c of
                       (IntConstr x) -> z x
-                      _ -> error "gunfold"
+                      _ -> error "gunfold Integer"
   dataTypeOf _ _ = integerType
 
 
@@ -132,7 +132,7 @@ instance Sat (ctx Int8) =>
   toConstr _ x = mkIntConstr int8Type (fromIntegral x)
   gunfold _ _ z c = case constrRep c of
                       (IntConstr x) -> z (fromIntegral x)
-                      _ -> error "gunfold"
+                      _ -> error "gunfold Int8"
   dataTypeOf _ _ = int8Type
 
 
@@ -147,7 +147,7 @@ instance Sat (ctx Int16) =>
   toConstr _ x = mkIntConstr int16Type (fromIntegral x)
   gunfold _ _ z c = case constrRep c of
                       (IntConstr x) -> z (fromIntegral x)
-                      _ -> error "gunfold"
+                      _ -> error "gunfold Int16"
   dataTypeOf _ _ = int16Type
 
 
@@ -162,7 +162,7 @@ instance Sat (ctx Int32) =>
   toConstr _ x = mkIntConstr int32Type (fromIntegral x)
   gunfold _ _ z c = case constrRep c of
                       (IntConstr x) -> z (fromIntegral x)
-                      _ -> error "gunfold"
+                      _ -> error "gunfold Int32"
   dataTypeOf _ _ = int32Type
 
 
@@ -177,7 +177,7 @@ instance Sat (ctx Int64) =>
   toConstr _ x = mkIntConstr int64Type (fromIntegral x)
   gunfold _ _ z c = case constrRep c of
                       (IntConstr x) -> z (fromIntegral x)
-                      _ -> error "gunfold"
+                      _ -> error "gunfold Int64"
   dataTypeOf _ _ = int64Type
 
 
@@ -192,7 +192,7 @@ instance Sat (ctx Word) =>
   toConstr _ x = mkIntConstr wordType (fromIntegral x)
   gunfold _ _ z c = case constrRep c of
                       (IntConstr x) -> z (fromIntegral x)
-                      _ -> error "gunfold"
+                      _ -> error "gunfold Word"
   dataTypeOf _ _ = wordType
 
 
@@ -207,7 +207,7 @@ instance Sat (ctx Word8) =>
   toConstr _ x = mkIntConstr word8Type (fromIntegral x)
   gunfold _ _ z c = case constrRep c of
                       (IntConstr x) -> z (fromIntegral x)
-                      _ -> error "gunfold"
+                      _ -> error "gunfold Word8"
   dataTypeOf _ _ = word8Type
 
 
@@ -222,7 +222,7 @@ instance Sat (ctx Word16) =>
   toConstr _ x = mkIntConstr word16Type (fromIntegral x)
   gunfold _ _ z c = case constrRep c of
                       (IntConstr x) -> z (fromIntegral x)
-                      _ -> error "gunfold"
+                      _ -> error "gunfold Word16"
   dataTypeOf _ _ = word16Type
 
 
@@ -237,7 +237,7 @@ instance Sat (ctx Word32) =>
   toConstr _ x = mkIntConstr word32Type (fromIntegral x)
   gunfold _ _ z c = case constrRep c of
                       (IntConstr x) -> z (fromIntegral x)
-                      _ -> error "gunfold"
+                      _ -> error "gunfold Word32"
   dataTypeOf _ _ = word32Type
 
 
@@ -252,7 +252,7 @@ instance Sat (ctx Word64) =>
   toConstr _ x = mkIntConstr word64Type (fromIntegral x)
   gunfold _ _ z c = case constrRep c of
                       (IntConstr x) -> z (fromIntegral x)
-                      _ -> error "gunfold"
+                      _ -> error "gunfold Word64"
   dataTypeOf _ _ = word64Type
 
 
@@ -270,7 +270,7 @@ instance (Sat (ctx (Ratio a)), Data ctx a, Integral a) =>
           Data ctx (Ratio a) where
   toConstr _ _ = ratioConstr
   gunfold _ k z c | constrIndex c == 1 = k (k (z (:%)))
-  gunfold _ _ _ _ = error "gunfold"
+  gunfold _ _ _ _ = error "gunfold Ratio"
   dataTypeOf _ _  = ratioDataType
 
 
@@ -293,7 +293,7 @@ instance (Sat (ctx [a]), Data ctx a) =>
   gunfold _ k z c = case constrIndex c of
                       1 -> z []
                       2 -> k (k (z (:)))
-                      _ -> error "gunfold"
+                      _ -> error "gunfold List"
   dataTypeOf _ _ = listDataType
   dataCast1 _ f = gcast1 f
 
@@ -316,7 +316,7 @@ instance (Sat (ctx (Maybe a)), Data ctx a) =>
   gunfold _ k z c = case constrIndex c of
                       1 -> z Nothing
                       2 -> k (z Just)
-                      _ -> error "gunfold"
+                      _ -> error "gunfold Maybe"
   dataTypeOf _ _ = maybeDataType
   dataCast1 _ f  = gcast1 f
 
@@ -345,7 +345,7 @@ instance Sat (ctx Ordering) =>
                       1 -> z LT
                       2 -> z EQ
                       3 -> z GT
-                      _ -> error "gunfold"
+                      _ -> error "gunfold Ordering"
   dataTypeOf _ _ = orderingDataType
 
 
@@ -368,7 +368,7 @@ instance (Sat (ctx (Either a b)), Data ctx a, Data ctx b) =>
   gunfold _ k z c = case constrIndex c of
                       1 -> k (z Left)
                       2 -> k (z Right)
-                      _ -> error "gunfold"
+                      _ -> error "gunfold Either"
   dataTypeOf _ _ = eitherDataType
   dataCast2 _ f  = gcast2 f
 
@@ -383,7 +383,7 @@ instance (Sat (ctx (Either a b)), Data ctx a, Data ctx b) =>
 instance (Sat (ctx (a -> b)), Data ctx a, Data ctx b) =>
           Data ctx (a -> b) where
   toConstr _ _   = error "toConstr"
-  gunfold _ _ _  = error "gunfold"
+  gunfold _ _ _  = error "gunfold (->)"
   dataTypeOf _ _ = mkNorepType "Prelude.(->)"
   dataCast2 _ f  = gcast2 f
 
@@ -400,7 +400,7 @@ instance (Sat (ctx ())) =>
           Data ctx () where
   toConstr _ _    = tuple0Constr
   gunfold _ _ z c | constrIndex c == 1 = z ()
-  gunfold _ _ _ _ = error "gunfold"
+  gunfold _ _ _ _ = error "gunfold ()"
   dataTypeOf _ _  = tuple0DataType
 
 
@@ -417,7 +417,7 @@ instance (Sat (ctx (a,b)), Data ctx a, Data ctx b) =>
   gfoldl _ f z (a,b) = z (,) `f` a `f` b
   toConstr _ _    = tuple2Constr
   gunfold _ k z c | constrIndex c == 1 = k (k (z (,)))
-  gunfold _ _ _ _ = error "gunfold"
+  gunfold _ _ _ _ = error "gunfold (,)"
   dataTypeOf _ _  = tuple2DataType
   dataCast2 _ f   = gcast2 f
 
@@ -435,7 +435,7 @@ instance (Sat (ctx (a,b,c)), Data ctx a, Data ctx b, Data ctx c) =>
   gfoldl _ f z (a,b,c) = z (,,) `f` a `f` b `f` c
   toConstr _ _    = tuple3Constr
   gunfold _ k z c | constrIndex c == 1 = k (k (k (z (,,))))
-  gunfold _ _ _ _ = error "gunfold"
+  gunfold _ _ _ _ = error "gunfold (,,)"
   dataTypeOf _ _  = tuple3DataType
 
 ------------------------------------------------------------------------------
@@ -452,7 +452,7 @@ instance (Sat (ctx (a,b,c,d)), Data ctx a, Data ctx b, Data ctx c, Data ctx d) =
   toConstr _ _ = tuple4Constr
   gunfold _ k z c = case constrIndex c of
                       1 -> k (k (k (k (z (,,,)))))
-                      _ -> error "gunfold"
+                      _ -> error "gunfold (,,,)"
   dataTypeOf _ _ = tuple4DataType
 
 
@@ -470,7 +470,7 @@ instance (Sat (ctx (a,b,c,d,e)), Data ctx a, Data ctx b, Data ctx c, Data ctx d,
   toConstr _ _ = tuple5Constr
   gunfold _ k z c = case constrIndex c of
                       1 -> k (k (k (k (k (z (,,,,))))))
-                      _ -> error "gunfold"
+                      _ -> error "gunfold (,,,,)"
   dataTypeOf _ _ = tuple5DataType
 
 
@@ -488,7 +488,7 @@ instance (Sat (ctx (a,b,c,d,e,f)), Data ctx a, Data ctx b, Data ctx c, Data ctx 
   toConstr _ _ = tuple6Constr
   gunfold _ k z c = case constrIndex c of
                       1 -> k (k (k (k (k (k (z (,,,,,)))))))
-                      _ -> error "gunfold"
+                      _ -> error "gunfold (,,,,,)"
   dataTypeOf _ _ = tuple6DataType
 
 
@@ -507,7 +507,7 @@ instance (Sat (ctx (a,b,c,d,e,f,g)), Data ctx a, Data ctx b, Data ctx c, Data ct
   toConstr _ _ = tuple7Constr
   gunfold _ k z c = case constrIndex c of
                       1 -> k (k (k (k (k (k (k (z (,,,,,,))))))))
-                      _ -> error "gunfold"
+                      _ -> error "gunfold (,,,,,,)"
   dataTypeOf _ _ = tuple7DataType
 
 
@@ -517,7 +517,7 @@ instance (Sat (ctx (a,b,c,d,e,f,g)), Data ctx a, Data ctx b, Data ctx c, Data ct
 instance Sat (ctx TypeRep) =>
          Data ctx TypeRep where
   toConstr _ _   = error "toConstr"
-  gunfold _ _ _  = error "gunfold"
+  gunfold _ _ _  = error "gunfold TypeRep"
   dataTypeOf _ _ = mkNorepType "Data.Typeable.TypeRep"
 
 
@@ -527,7 +527,7 @@ instance Sat (ctx TypeRep) =>
 instance Sat (ctx TyCon) =>
          Data ctx TyCon where
   toConstr _ _   = error "toConstr"
-  gunfold _ _ _  = error "gunfold"
+  gunfold _ _ _  = error "gunfold TyCon"
   dataTypeOf _ _ = mkNorepType "Data.Typeable.TyCon"
 
 
@@ -540,7 +540,7 @@ $(deriveTypeable [''DataType])
 instance Sat (ctx DataType) =>
          Data ctx DataType where
   toConstr _ _   = error "toConstr"
-  gunfold _ _ _  = error "gunfold"
+  gunfold _ _ _  = error "gunfold DataType"
   dataTypeOf _ _ = mkNorepType "Data.Generics.Basics.DataType"
 
 
@@ -550,7 +550,7 @@ instance Sat (ctx DataType) =>
 instance (Sat (ctx (IO a)), Typeable a) =>
           Data ctx (IO a) where
   toConstr _ _   = error "toConstr"
-  gunfold _ _ _  = error "gunfold"
+  gunfold _ _ _  = error "gunfold IO"
   dataTypeOf _ _ = mkNorepType "GHC.IOBase.IO"
 
 
@@ -560,7 +560,7 @@ instance (Sat (ctx (IO a)), Typeable a) =>
 instance Sat (ctx Handle) =>
          Data ctx Handle where
   toConstr _ _   = error "toConstr"
-  gunfold _ _ _  = error "gunfold"
+  gunfold _ _ _  = error "gunfold Handle"
   dataTypeOf _ _ = mkNorepType "GHC.IOBase.Handle"
 
 
@@ -570,7 +570,7 @@ instance Sat (ctx Handle) =>
 instance (Sat (ctx (Ptr a)), Typeable a) =>
           Data ctx (Ptr a) where
   toConstr _ _   = error "toConstr"
-  gunfold _ _ _  = error "gunfold"
+  gunfold _ _ _  = error "gunfold Ptr"
   dataTypeOf _ _ = mkNorepType "GHC.Ptr.Ptr"
 
 
@@ -580,7 +580,7 @@ instance (Sat (ctx (Ptr a)), Typeable a) =>
 instance (Sat (ctx (StablePtr a)), Typeable a) =>
           Data ctx (StablePtr a) where
   toConstr _ _   = error "toConstr"
-  gunfold _ _ _  = error "gunfold"
+  gunfold _ _ _  = error "gunfold StablePtr"
   dataTypeOf _ _ = mkNorepType "GHC.Stable.StablePtr"
 
 
@@ -590,7 +590,7 @@ instance (Sat (ctx (StablePtr a)), Typeable a) =>
 instance (Sat (ctx (IORef a)), Typeable a) =>
           Data ctx (IORef a) where
   toConstr _ _   = error "toConstr"
-  gunfold _ _ _  = error "gunfold"
+  gunfold _ _ _  = error "gunfold IORef"
   dataTypeOf _ _ = mkNorepType "GHC.IOBase.IORef"
 
 
@@ -600,7 +600,7 @@ instance (Sat (ctx (IORef a)), Typeable a) =>
 instance (Sat (ctx (ForeignPtr a)), Typeable a) =>
           Data ctx (ForeignPtr a) where
   toConstr _ _   = error "toConstr"
-  gunfold _ _ _  = error "gunfold"
+  gunfold _ _ _  = error "gunfold ForeignPtr"
   dataTypeOf _ _ = mkNorepType "GHC.ForeignPtr.ForeignPtr"
 
 
@@ -610,7 +610,7 @@ instance (Sat (ctx (ForeignPtr a)), Typeable a) =>
 instance (Sat (ctx (ST s a)), Typeable s, Typeable a) =>
           Data ctx (ST s a) where
   toConstr _ _   = error "toConstr"
-  gunfold _ _ _  = error "gunfold"
+  gunfold _ _ _  = error "gunfold ST"
   dataTypeOf _ _ = mkNorepType "GHC.ST.ST"
 
 
@@ -620,7 +620,7 @@ instance (Sat (ctx (ST s a)), Typeable s, Typeable a) =>
 instance Sat (ctx ThreadId) =>
          Data ctx ThreadId where
   toConstr _ _   = error "toConstr"
-  gunfold _ _ _  = error "gunfold"
+  gunfold _ _ _  = error "gunfold ThreadId"
   dataTypeOf _ _ = mkNorepType "GHC.Conc.ThreadId"
 
 
@@ -630,7 +630,7 @@ instance Sat (ctx ThreadId) =>
 instance (Sat (ctx (TVar a)), Typeable a) =>
           Data ctx (TVar a) where
   toConstr _ _   = error "toConstr"
-  gunfold _ _ _  = error "gunfold"
+  gunfold _ _ _  = error "gunfold TVar"
   dataTypeOf _ _ = mkNorepType "GHC.Conc.TVar"-}
 
 
@@ -640,7 +640,7 @@ instance (Sat (ctx (TVar a)), Typeable a) =>
 instance (Sat (ctx (MVar a)), Typeable a) =>
           Data ctx (MVar a) where
   toConstr _ _   = error "toConstr"
-  gunfold _ _ _  = error "gunfold"
+  gunfold _ _ _  = error "gunfold MVar"
   dataTypeOf _ _ = mkNorepType "GHC.Conc.MVar"
 
 
@@ -650,7 +650,7 @@ instance (Sat (ctx (MVar a)), Typeable a) =>
 {-instance (Sat (ctx (STM a)), Typeable a) =>
           Data ctx (STM a) where
   toConstr _ _   = error "toConstr"
-  gunfold _ _ _  = error "gunfold"
+  gunfold _ _ _  = error "gunfold STM"
   dataTypeOf _ _ = mkNorepType "GHC.Conc.STM"-}
 
 
@@ -663,7 +663,7 @@ instance (Sat (ctx [b]), Sat (ctx (Array a b)), Typeable a, Data ctx b, Data ctx
           Data ctx (Array a b) where
   gfoldl _ f z a = z (listArray (bounds a)) `f` (elems a)
   toConstr _ _   = error "toConstr"
-  gunfold _ _ _  = error "gunfold"
+  gunfold _ _ _  = error "gunfold Array"
   dataTypeOf _ _ = mkNorepType "Data.Array.Array"
 
 ------------------------------------------------------------------------------
