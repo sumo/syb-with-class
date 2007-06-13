@@ -63,14 +63,13 @@ deriveTypeablePrim name nParam
 --   instance declaration for the Data class.
 --
 --   Doesn't do gunfold, dataCast1 or dataCast2
-deriveDataPrim :: Name -> [TypeQ] -> [(Name, Int)] -> [(Name, [(Maybe Name, Type)])] -> Q [Dec]
-deriveDataPrim name typeQParams cons terms =
+deriveDataPrim :: Name -> [Type] -> [(Name, Int)] -> [(Name, [(Maybe Name, Type)])] -> Q [Dec]
+deriveDataPrim name typeParams cons terms =
   do sequence (
       conDecs ++
 
       [ dataTypeDec
-      , instanceD context
-           (conT ''Data `appT` varT (mkName "ctx") `appT` (foldl1 appT ([conT name] ++ typeQParams)))
+      , instanceD context (dataCxt myType)
         [ funD 'gfoldl
             [ clause ([wildP] ++ (map (varP . mkName) ["f", "z", "x"]))
                 (normalB $ caseE (varE (mkName "x")) (map mkMatch cons))
@@ -92,14 +91,19 @@ deriveDataPrim name typeQParams cons terms =
         ]
       ])
      where
-         distinctTypes = map return $ filter (\x -> case x of (VarT _) -> False; _ -> True) $ nub $ map snd $ concat $ map snd terms
+         types = filter (\x -> case x of (VarT _) -> False; _ -> True) $ map snd $ concat $ map snd terms
          fieldNames = let fs = map (map fst.snd) terms in
                           map (\x -> if (null x || all isNothing x) then [] else map (maybe "" show) x) fs
-         nParam = length typeQParams
+         nParam = length typeParams
 
 {-         paramNames = take nParam (zipWith (++) (repeat "a") (map show [0..]))
          typeQParams = map (\nm -> varT (mkName nm)) paramNames-}
-         context = cxt $ (map (\typ -> conT ''Data `appT` varT (mkName "ctx") `appT` typ) distinctTypes) ++(map (\typ -> conT ''Sat `appT` (varT (mkName "ctx") `appT` typ)) distinctTypes) ++ (map (\typ -> conT ''Data `appT` (varT (mkName "ctx")) `appT` typ) typeQParams) ++ [conT ''Sat `appT` ((varT (mkName "ctx")) `appT` (foldl1 appT ([conT name] ++ typeQParams)))]
+         myType = foldl AppT (ConT name) typeParams
+         dataCxt typ = conT ''Data `appT` varT (mkName "ctx") `appT` return typ
+         satCxt typ = conT ''Sat `appT` (varT (mkName "ctx") `appT` return typ)
+         dataCxtTypes = nub (typeParams ++ types)
+         satCxtTypes = nub (myType : types)
+         context = cxt (map dataCxt dataCxtTypes ++ map satCxt satCxtTypes)
 
          -- Takes a pair (constructor name, number of type arguments) and
          -- creates the correct definition for gfoldl
@@ -241,7 +245,7 @@ deriveOneDec :: Dec -> Q [Dec]
 deriveOneDec dec =
   do (name, param, ca, terms) <- typeInfo (return dec)
      t <- deriveTypeablePrim name (length param)
-     d <- deriveDataPrim name (map varT param) ca terms
+     d <- deriveDataPrim name (map VarT param) ca terms
      return (t ++ d)
 
 deriveOneData :: Name -> Q [Dec]
@@ -250,7 +254,7 @@ deriveOneData n =
         case info' of
            TyConI i -> do
              (name, param, ca, terms) <- typeInfo ((return i) :: Q Dec)
-             d <- deriveDataPrim name (map varT param) ca terms
+             d <- deriveDataPrim name (map VarT param) ca terms
              return d
            _ -> error ("derive: can't be used on anything but a type " ++
                       "constructor of an algebraic data type")
