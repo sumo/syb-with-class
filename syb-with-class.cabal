@@ -20,5 +20,7 @@ Exposed-modules:
     Data.Generics.SYB.WithClass.Context
     Data.Generics.SYB.WithClass.Derive
     Data.Generics.SYB.WithClass.Instances
+Extensions: UndecidableInstances, OverlappingInstances, Rank2Types,
+            EmptyDataDecls, TemplateHaskell, FlexibleInstances, CPP
 GHC-Options: -Wall -Werror
 
