@@ -1,5 +1,5 @@
 {-# LANGUAGE TemplateHaskell, FlexibleInstances,
-             UndecidableInstances, OverlappingInstances #-}
+             UndecidableInstances, OverlappingInstances, CPP #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 -- This is a module full of or[hans, so don't warn about them
 
@@ -535,7 +535,9 @@ instance Sat (ctx TyCon) =>
 
 
 -- INSTANCE_TYPEABLE0(DataType,dataTypeTc,"DataType")
+#ifndef __HADDOCK__
 $(deriveTypeable [''DataType])
+#endif
 
 instance Sat (ctx DataType) =>
          Data ctx DataType where

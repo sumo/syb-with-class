@@ -1,4 +1,5 @@
-{-# LANGUAGE UndecidableInstances, OverlappingInstances, Rank2Types #-}
+{-# LANGUAGE UndecidableInstances, OverlappingInstances, Rank2Types,
+    CPP #-}
 
 {-
 
@@ -20,8 +21,11 @@ module Data.Generics.SYB.WithClass.Basics (
 import Data.Typeable
 import Data.Generics.SYB.WithClass.Context
 
-
+#ifdef __HADDOCK__
+data Proxy
+#else
 data Proxy (a :: * -> *)
+#endif
 
 ------------------------------------------------------------------------------
 -- The ingenious Data class

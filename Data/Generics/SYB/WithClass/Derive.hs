@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell, CPP #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 -- We can't warn about missing sigs as we have a group of decls in
 -- quasi-quotes that we're going to put in a class instance
@@ -37,6 +37,9 @@ maxTypeParams = 7
 --   it has and creates a Typeable instance for it.
 deriveTypeablePrim :: Name -> Int -> Q [Dec]
 deriveTypeablePrim name nParam
+#ifdef __HADDOCK__
+ = undefined
+#else
   | nParam <= maxTypeParams =
      sequence
       [ instanceD (return [])
@@ -54,6 +57,7 @@ deriveTypeablePrim name nParam
     typeOfName
       | nParam == 0  = mkName "typeOf"
       | otherwise    = mkName ("typeOf" ++ show nParam)
+#endif
 
 --
 -- | Takes a name of a algebraic data type, the number of parameters it
@@ -65,6 +69,9 @@ deriveTypeablePrim name nParam
 --   Doesn't do gunfold, dataCast1 or dataCast2
 deriveDataPrim :: Name -> [Type] -> [(Name, Int)] -> [(Name, [(Maybe Name, Type)])] -> Q [Dec]
 deriveDataPrim name typeParams cons terms =
+#ifdef __HADDOCK__
+ undefined
+#else
   do sequence (
       conDecs ++
 
@@ -153,9 +160,13 @@ deriveDataPrim name typeParams cons terms =
 
          mkSel (c,n) e = match  (conP c $ replicate n wildP)
                          (normalB e) []
+#endif
 
 deriveMinimalData :: Name -> Int  -> Q [Dec]
 deriveMinimalData name nParam  = do
+#ifdef __HADDOCK__
+ undefined
+#else
    decs <- qOfDecs
    let listOfDecQ = map return decs
    sequence
@@ -175,6 +186,7 @@ deriveMinimalData name nParam  = do
                             show (typeOf x))
            gfoldl _ z x = z x
         |]
+#endif
 
 {- instance Data NameSet where
    gunfold _ _ _ = error ("gunfold not implemented")
