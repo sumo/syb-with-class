@@ -194,45 +194,25 @@ deriveMinimalData name nParam  = do
    dataTypeOf x = error ("dataTypeOf not implemented for " ++ show (typeOf x))
    gfoldl f z x = z x -}
 
-typeInfo :: DecQ -> Q (Name, [Name], [(Name, Int)], [(Name, [(Maybe Name, Type)])])
-typeInfo m =
-     do d <- m
+typeInfo :: Dec -> Q (Name, [Name], [(Name, Int)], [(Name, [(Maybe Name, Type)])])
+typeInfo d =
         case d of
-           DataD {} ->
-            return $ (simpleName $ name d, paramsA d, consA d, termsA d)
-           NewtypeD {} ->
-            return $ (simpleName $ name d, paramsA d, consA d, termsA d)
+           DataD _ n ps cs _ ->
+            return $ (simpleName n, ps, map conA cs, map termA cs)
+           NewtypeD _ n ps c _ ->
+            return $ (simpleName n, ps, [conA c], [termA c])
            _ -> error ("derive: not a data type declaration: " ++ show d)
 
      where
-        consA (DataD _ _ _ cs _)    = map conA cs
-        consA (NewtypeD _ _ _ c _)  = [ conA c ]
-        consA d                     = error ("consA: Unexpected decl: " ++
-                                             show d)
-
-        paramsA (DataD _ _ ps _ _)    = ps
-        paramsA (NewtypeD _ _ ps _ _) = ps
-        paramsA d                     = error ("paramsA: Unexpected decl: " ++
-                                               show d)
-
-        termsA (DataD _ _ _ cs _)   = map termA cs
-        termsA (NewtypeD _ _ _ c _) = [ termA c ]
-        termsA d                    = error ("termsA: Unexpected decl: " ++
-                                             show d)
-
         termA (NormalC c xs)        = (c, map (\x -> (Nothing, snd x)) xs)
         termA (RecC c xs)           = (c, map (\(n, _, t) -> (Just $ simpleName n, t)) xs)
         termA (InfixC t1 c t2)      = (c, [(Nothing, snd t1), (Nothing, snd t2)])
         termA (ForallC _ _ c)       = termA c
 
-        conA (NormalC c xs)         = (simpleName c, length xs)
-        conA (RecC c xs)            = (simpleName c, length xs)
-        conA (InfixC _ c _)         = (simpleName c, 2)
+        conA (NormalC c xs)         = (c, length xs)
+        conA (RecC c xs)            = (c, length xs)
+        conA (InfixC _ c _)         = (c, 2)
         conA (ForallC _ _ c)        = conA c
-
-        name (DataD _ n _ _ _)      = n
-        name (NewtypeD _ n _ _ _)   = n
-        name d                      = error $ show d
 
 simpleName :: Name -> Name
 simpleName nm =
@@ -255,7 +235,7 @@ deriveOne n =
 
 deriveOneDec :: Dec -> Q [Dec]
 deriveOneDec dec =
-  do (name, param, ca, terms) <- typeInfo (return dec)
+  do (name, param, ca, terms) <- typeInfo dec
      t <- deriveTypeablePrim name (length param)
      d <- deriveDataPrim name (map VarT param) ca terms
      return (t ++ d)
@@ -265,7 +245,7 @@ deriveOneData n =
   do    info' <- reify n
         case info' of
            TyConI i -> do
-             (name, param, ca, terms) <- typeInfo ((return i) :: Q Dec)
+             (name, param, ca, terms) <- typeInfo i
              d <- deriveDataPrim name (map VarT param) ca terms
              return d
            _ -> error ("derive: can't be used on anything but a type " ++
@@ -315,7 +295,7 @@ deriveOneTypeable n =
   do    info' <- reify n
         case info' of
            TyConI i -> do
-             (name, param, _, _) <- typeInfo ((return i) :: Q Dec)
+             (name, param, _, _) <- typeInfo i
              t <- deriveTypeablePrim name (length param)
              return t
            _ -> error ("derive: can't be used on anything but a type " ++
@@ -344,7 +324,7 @@ deriveMinimalOne n =
   do    info' <- reify n
         case info' of
            TyConI i -> do
-            (name, param, _, _) <- typeInfo ((return i) :: Q Dec)
+            (name, param, _, _) <- typeInfo i
             t <- deriveTypeablePrim name (length param)
             d <- deriveMinimalData name (length param)
             return $ t ++ d
