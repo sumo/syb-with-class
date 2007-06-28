@@ -77,15 +77,42 @@ deriveDataPrim name typeParams cons terms =
 
       [ dataTypeDec
       , instanceD context (dataCxt myType)
-        [ funD 'gfoldl
+        [ let -- Takes a pair (constructor name, number of type arguments) and
+              -- creates the correct definition for gfoldl
+              -- It is of the form z <constr name> `f` arg1 `f` ... `f` argn
+              mkMatch (c,n)
+               = do vs <- mapM (\s -> newName s) names
+                    match (conP c $ map varP vs)
+                          (normalB $ foldl
+                             (\e x -> [| $(varE (mkName "f")) $e $(varE x) |])
+                             [| $(varE (mkName "z")) $(conE c) |]
+                             vs
+                          ) []
+                  where names = take n $ map (('x' :) . show) [0 :: Integer ..]
+          in funD 'gfoldl
             [ clause ([wildP] ++ (map (varP . mkName) ["f", "z", "x"]))
                 (normalB $ caseE (varE (mkName "x")) (map mkMatch cons))
                 []
             ]
-        , funD 'gunfold
-          [clause ([wildP] ++ (map (varP. mkName) ["k", "z", "c"]))
-            (if (null cons) then (normalB [| error "gunfold : Type has no constructors" |])
-                            else (normalB $ caseE (varE (mkName "constrIndex") `appE` varE (mkName "c")) mkMatches)) []]
+        , let body = if null cons
+                     then [| error "gunfold : Type has no constructors" |]
+                     else caseE (varE 'constrIndex `appE` varE (mkName "c"))
+                                matches
+              mkMatch n (cn, i)
+               = match (litP $ integerL n)
+                       (normalB $ reapply (appE (varE $ mkName "k"))
+                                          i
+                                          (varE (mkName "z") `appE` conE cn)
+                       )
+                       []
+                    where reapply _ 0 f = f
+                          reapply x j f = x (reapply x (j-1) f)
+              fallThroughMatch
+               = match wildP (normalB [| error "gunfold: fallthrough" |]) []
+              matches = zipWith mkMatch [1..] cons ++ [fallThroughMatch]
+          in funD 'gunfold
+          [clause (wildP : map (varP. mkName) ["k", "z", "c"])
+            (normalB body) []]
         , funD 'toConstr
             [ clause [wildP, varP (mkName "x")]
                 (normalB $ caseE (varE (mkName "x"))
@@ -112,22 +139,6 @@ deriveDataPrim name typeParams cons terms =
          satCxtTypes = nub (myType : types)
          context = cxt (map dataCxt dataCxtTypes ++ map satCxt satCxtTypes)
 
-         -- Takes a pair (constructor name, number of type arguments) and
-         -- creates the correct definition for gfoldl
-         -- It is of the form z <constr name> `f` arg1 `f` ... `f` argn
-         mkMatch (c,n) =
-            do  vs <- mapM (\s -> newName s) names
-                match   (conP c $ map varP vs)
-                        (normalB $ foldl
-                           (\e x -> (varE (mkName "f") `appE` e) `appE` varE x)
-                                    (varE (mkName "z") `appE` conE c)
-                                    vs
-                        ) []
-           where names = take n (zipWith (++) (repeat "x") (map show [0 :: Integer ..]))
-         mkMatches = map (\(n, (cn, i)) -> match (litP $ integerL n) (normalB $ reapply (appE (varE $ mkName "k")) i (varE (mkName "z") `appE` conE cn)) []) (zip [1..] cons)
-           where
-           reapply _ 0 f = f
-           reapply x n f = x (reapply x (n-1) f)
          lowCaseName = map toLower nameStr
          nameStr = nameBase name
          theDataTypeName = lowCaseName ++ "DataType"
