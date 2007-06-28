@@ -75,7 +75,8 @@ deriveDataPrim name typeParams cons terms =
   do sequence (
       conDecs ++
 
-      [ dataTypeDec
+      [ dataTypeSig
+      , dataTypeDec
       , instanceD context (dataCxt myType)
         [ let -- Takes a pair (constructor name, number of type arguments) and
               -- creates the correct definition for gfoldl
@@ -120,7 +121,7 @@ deriveDataPrim name typeParams cons terms =
                 []
             ]
         , funD 'dataTypeOf
-            [ clause [wildP, wildP] (normalB $ varE (mkName theDataTypeName)) []
+            [ clause [wildP, wildP] (normalB $ varE theDataTypeName) []
             ]
         ]
       ])
@@ -141,10 +142,12 @@ deriveDataPrim name typeParams cons terms =
 
          lowCaseName = map toLower nameStr
          nameStr = nameBase name
-         theDataTypeName = lowCaseName ++ "DataType"
+         theDataTypeNameBase = lowCaseName ++ "DataType"
+         theDataTypeName = mkName theDataTypeNameBase
          -- Creates dataTypeDec of the form:
          -- <name>DataType = mkDataType <name> [<constructors]
-         dataTypeDec = funD (mkName theDataTypeName)
+         dataTypeSig = sigD theDataTypeName [t| DataType |]
+         dataTypeDec = funD theDataTypeName
                        [clause []
                         (normalB
                          [| mkDataType nameStr $(listE (conVarExps)) |]) [] ]
@@ -153,7 +156,7 @@ deriveDataPrim name typeParams cons terms =
          -- of form varE (mkName <con>Constr)
          numCons = length cons
          constrNames =
-           take numCons (map (\i -> theDataTypeName ++ show i ++ "Constr") [1 :: Integer ..])
+           take numCons (map (\i -> theDataTypeNameBase ++ show i ++ "Constr") [1 :: Integer ..])
          conNames = map (nameBase . fst) cons
          conVarExps = map (varE . mkName) constrNames
          conDecs = concat conDecss
@@ -164,7 +167,7 @@ deriveDataPrim name typeParams cons terms =
              [ sigD n [t| Constr |],
                funD n [clause []
                           (normalB
-                          [| mkConstr $(varE (mkName theDataTypeName))
+                          [| mkConstr $(varE theDataTypeName)
                                       conNm
                                       fieldNm
                                       $(fixity conNm)
