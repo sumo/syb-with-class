@@ -130,7 +130,7 @@ deriveDataPrim name typeParams cons terms =
                           map (\x -> if (null x || all isNothing x) then [] else map (maybe "" show) x) fs
          nParam = length typeParams
 
-{-         paramNames = take nParam (zipWith (++) (repeat "a") (map show [0..]))
+{-         paramNames = take nParam $ map (('a' :) . show) [0..]
          typeQParams = map (\nm -> varT (mkName nm)) paramNames-}
          myType = foldl AppT (ConT name) typeParams
          dataCxt typ = conT ''Data `appT` varT (mkName "ctx") `appT` return typ
@@ -186,7 +186,7 @@ deriveMinimalData name nParam  = do
          listOfDecQ ]
 
    where
-     paramNames = take nParam (zipWith (++) (repeat "a") (map show [0 :: Integer ..]))
+     paramNames = take nParam $ map (('a' :) . show) [0 :: Integer ..]
      typeQParams = map (\nm -> varT (mkName nm)) paramNames
      context = cxt (map (\typ -> conT ''Data `appT` typ) typeQParams)
      qOfDecs =
