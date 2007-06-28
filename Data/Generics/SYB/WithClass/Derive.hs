@@ -156,16 +156,21 @@ deriveDataPrim name typeParams cons terms =
            take numCons (map (\i -> theDataTypeName ++ show i ++ "Constr") [1 :: Integer ..])
          conNames = map (nameBase . fst) cons
          conVarExps = map (varE . mkName) constrNames
-         conDecs = zipWith3 mkConstrDec constrNames conNames fieldNames
+         conDecs = concat conDecss
+         conDecss = zipWith3 mkConstrDec constrNames conNames fieldNames
           where
            mkConstrDec decNm conNm fieldNm =
-             funD (mkName decNm)
-                     [clause []
-                        (normalB
-                         [| mkConstr $(varE (mkName theDataTypeName)) conNm fieldNm
-                            $(fixity conNm)
-                         |]) []]
-
+             let n = mkName decNm in
+             [ sigD n [t| Constr |],
+               funD n [clause []
+                          (normalB
+                          [| mkConstr $(varE (mkName theDataTypeName))
+                                      conNm
+                                      fieldNm
+                                      $(fixity conNm)
+                           |])
+                          []]
+             ]
          fixity (':':_)  = [| Infix |]
          fixity _        = [| Prefix |]
 
