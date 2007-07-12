@@ -9,6 +9,7 @@ import Data.Generics.SYB.WithClass.Basics
 import Data.Generics.SYB.WithClass.Derive
 
 import Data.Array
+import Data.ByteString.Char8 (ByteString)
 import Data.Typeable
 import Data.Int              -- So we can give Data instance for Int8, ...
 import Data.Word             -- So we can give Data instance for Word8, ...
@@ -669,4 +670,6 @@ instance (Sat (ctx [b]), Sat (ctx (Array a b)), Typeable a, Data ctx b, Data ctx
   dataTypeOf _ _ = mkNorepType "Data.Array.Array"
 
 ------------------------------------------------------------------------------
+
+$( deriveData [''ByteString] )
 
