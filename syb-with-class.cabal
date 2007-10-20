@@ -14,7 +14,7 @@ Description:
     Scrap Your Boilerplate With Class system.
 Category:           Data
 Tested-With:        GHC==6.6
-Build-Depends:      base, template-haskell
+Build-Depends:      base, template-haskell, bytestring, array
 Exposed-modules:
     Data.Generics.SYB.WithClass.Basics
     Data.Generics.SYB.WithClass.Context
