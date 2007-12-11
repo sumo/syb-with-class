@@ -1,7 +1,8 @@
 {-# LANGUAGE TemplateHaskell, FlexibleInstances,
-             UndecidableInstances, OverlappingInstances, CPP, MultiParamTypeClasses #-}
+             UndecidableInstances, OverlappingInstances, CPP,
+             MultiParamTypeClasses #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
--- This is a module full of or[hans, so don't warn about them
+-- This is a module full of orphans, so don't warn about them
 
 module Data.Generics.SYB.WithClass.Instances () where
 

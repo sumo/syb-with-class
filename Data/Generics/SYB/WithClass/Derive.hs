@@ -22,15 +22,9 @@ module Data.Generics.SYB.WithClass.Derive where
 
 import Language.Haskell.TH
 import Data.List
-import Data.Char
 import Control.Monad
 import Data.Maybe
 import Data.Generics.SYB.WithClass.Basics
-
--- maximum type paramters for a Typeable instance
-maxTypeParams :: Int
-maxTypeParams = 7
-
 
 --
 -- | Takes the name of an algebraic data type, the number of type parameters
@@ -40,26 +34,38 @@ deriveTypeablePrim name nParam
 #ifdef __HADDOCK__
  = undefined
 #else
-  | nParam <= maxTypeParams =
-     sequence
-      [ instanceD (return [])
-         (conT typeableName `appT` conT name)
-        [ funD typeOfName [clause [wildP] (normalB
-           [| mkTyConApp (mkTyCon $(litE $ stringL (nameBase name))) [] |]) []]
-        ]
-      ]
-  | otherwise = error ("Typeable classes can only have a maximum of " ++
-                      show maxTypeParams ++ " parameters")
-  where
-    typeableName
-      | nParam == 0 = mkName "Typeable"
-      | otherwise   = mkName ("Typeable" ++ show nParam)
-    typeOfName
-      | nParam == 0  = mkName "typeOf"
-      | otherwise    = mkName ("typeOf" ++ show nParam)
+ = case index names nParam of
+   Just (className, methodName) ->
+       let moduleString = case nameModule name of
+                          Just m -> m ++ "."
+                          Nothing -> ""
+           typeString = moduleString ++ nameBase name
+           body = [| mkTyConApp (mkTyCon $(litE $ stringL typeString)) [] |]
+           method = funD methodName [clause [wildP] (normalB body) []]
+       in sequence [ instanceD (return [])
+                               (conT className `appT` conT name)
+                               [ method ]
+                   ]
+   Nothing -> error ("Typeable classes can only have a maximum of " ++
+                     show (length names + 1) ++ " parameters")
+ where index [] _ = Nothing
+       index (x:_) 0 = Just x
+       index (_:xs) n = index xs (n - 1)
+       names = [(''Typeable, 'typeOf),
+                (''Typeable1, 'typeOf1),
+                (''Typeable2, 'typeOf2),
+                (''Typeable3, 'typeOf3),
+                (''Typeable4, 'typeOf4),
+                (''Typeable5, 'typeOf5),
+                (''Typeable6, 'typeOf6),
+                (''Typeable7, 'typeOf7)]
 #endif
 
---
+type Constructor = (Name,         -- Name of the constructor
+                    Int,          -- Number of constructor arguments
+                    Maybe [Name], -- Name of the field selector, if any
+                    [Type])       -- Type of the constructor argument
+
 -- | Takes a name of a algebraic data type, the number of parameters it
 --   has and a list of constructor pairs.  Each one of these constructor
 --   pairs consists of a constructor name and the number of type
@@ -67,144 +73,143 @@ deriveTypeablePrim name nParam
 --   instance declaration for the Data class.
 --
 --   Doesn't do gunfold, dataCast1 or dataCast2
-deriveDataPrim :: Name -> [Type] -> [(Name, Int)] -> [(Name, [(Maybe Name, Type)])] -> Q [Dec]
-deriveDataPrim name typeParams cons terms =
+deriveDataPrim :: Name -> [Type] -> [Constructor] -> Q [Dec]
+deriveDataPrim name typeParams cons =
 #ifdef __HADDOCK__
  undefined
 #else
-  do sequence (
-      conDecs ++
+ do theDataTypeName <- newName "dataType"
+    constrNames <- replicateM (length cons) $ newName "constr"
+    let constrExps = map varE constrNames
 
-      [ dataTypeSig
-      , dataTypeDec
-      , instanceD context (dataCxt myType)
-        [ let -- Takes a pair (constructor name, number of type arguments) and
-              -- creates the correct definition for gfoldl
-              -- It is of the form z <constr name> `f` arg1 `f` ... `f` argn
-              mkMatch (c,n)
-               = do vs <- mapM (\s -> newName s) names
-                    match (conP c $ map varP vs)
-                          (normalB $ foldl
-                             (\e x -> [| $(varE (mkName "f")) $e $(varE x) |])
-                             [| $(varE (mkName "z")) $(conE c) |]
-                             vs
-                          ) []
-                  where names = take n $ map (('x' :) . show) [0 :: Integer ..]
-          in funD 'gfoldl
-            [ clause ([wildP] ++ (map (varP . mkName) ["f", "z", "x"]))
-                (normalB $ caseE (varE (mkName "x")) (map mkMatch cons))
-                []
-            ]
-        , let body = if null cons
-                     then [| error "gunfold : Type has no constructors" |]
-                     else caseE (varE 'constrIndex `appE` varE (mkName "c"))
-                                matches
-              mkMatch n (cn, i)
-               = match (litP $ integerL n)
-                       (normalB $ reapply (appE (varE $ mkName "k"))
-                                          i
-                                          (varE (mkName "z") `appE` conE cn)
-                       )
-                       []
-                    where reapply _ 0 f = f
-                          reapply x j f = x (reapply x (j-1) f)
-              fallThroughMatch
-               = match wildP (normalB [| error "gunfold: fallthrough" |]) []
-              matches = zipWith mkMatch [1..] cons ++ [fallThroughMatch]
-          in funD 'gunfold
-          [clause (wildP : map (varP. mkName) ["k", "z", "c"])
-            (normalB body) []]
-        , funD 'toConstr
-            [ clause [wildP, varP (mkName "x")]
-                (normalB $ caseE (varE (mkName "x"))
-                 (zipWith mkSel cons conVarExps))
-                []
-            ]
-        , funD 'dataTypeOf
-            [ clause [wildP, wildP] (normalB $ varE theDataTypeName) []
-            ]
-        ]
-      ])
-     where
-         types = filter (\x -> case x of (VarT _) -> False; _ -> True) $ map snd $ concat $ map snd terms
-         fieldNames = let fs = map (map fst.snd) terms in
-                          map (\x -> if (null x || all isNothing x) then [] else map (maybe "" show) x) fs
-         nParam = length typeParams
+    let mkConstrDec :: Name -> Constructor -> Q [Dec]
+        mkConstrDec decNm (constrName, _, mfs, _) =
+          do let constrString = nameBase constrName
+                 fieldNames = case mfs of
+                              Nothing -> []
+                              Just fs -> map nameBase fs
+                 fixity (':':_)  = [| Infix |]
+                 fixity _        = [| Prefix |]
+                 body = [| mkConstr $(varE theDataTypeName)
+                                    constrString
+                                    fieldNames
+                                    $(fixity constrString)
+                         |]
+             sequence [ sigD decNm [t| Constr |],
+                        funD decNm [clause [] (normalB body) []]
+                      ]
+    conDecss <- zipWithM mkConstrDec constrNames cons
+    let conDecs = concat conDecss
+    sequence (
+     -- Creates
+     -- constr :: Constr
+     -- constr = mkConstr dataType "DataTypeName" [] Prefix
+     map return conDecs ++
+     [ -- Creates
+       -- dataType :: DataType
+       sigD theDataTypeName [t| DataType |]
+     , -- Creates
+       -- dataType = mkDataType <name> [<constructors]
+       let nameStr = nameBase name
+           body = [| mkDataType nameStr $(listE constrExps) |]
+       in funD theDataTypeName [clause [] (normalB body) []]
+     , -- Creates
+       -- instance (Data ctx Int, Sat (ctx Int), Sat (ctx DataType))
+       --       => Data ctx DataType
+       instanceD context (dataCxt myType)
+       [ -- Define the gfoldl method
+         do f <- newName "f"
+            z <- newName "z"
+            x <- newName "x"
+            let -- Takes a pair (constructor name, number of type
+                -- arguments) and creates the correct definition for
+                -- gfoldl. It is of the form
+                --     z <constr name> `f` arg1 `f` ... `f` argn
+                mkMatch (c, n, _, _)
+                 = do args <- replicateM n (newName "arg")
+                      let applyF e arg = [| $(varE f) $e $(varE arg) |]
+                          body = foldl applyF [| $(varE z) $(conE c) |] args
+                      match (conP c $ map varP args) (normalB body) []
+                matches = map mkMatch cons
+            funD 'gfoldl [ clause (wildP : map varP [f, z, x])
+                                  (normalB $ caseE (varE x) matches)
+                                  []
+                         ]
+       , -- Define the gunfold method
+         do k <- newName "k"
+            z <- newName "z"
+            c <- newName "c"
+            let body = if null cons
+                       then [| error "gunfold : Type has no constructors" |]
+                       else caseE [| constrIndex $(varE c) |] matches
+                mkMatch n (cn, i, _, _)
+                 = match (litP $ integerL n)
+                         (normalB $ reapply (appE (varE k))
+                                            i
+                                            [| $(varE z) $(conE cn) |]
+                         )
+                         []
+                   where reapply _ 0 f = f
+                         reapply x j f = x (reapply x (j-1) f)
+                fallThroughMatch
+                 = match wildP (normalB [| error "gunfold: fallthrough" |]) []
+                matches = zipWith mkMatch [1..] cons ++ [fallThroughMatch]
+            funD 'gunfold [clause (wildP : map varP [k, z, c])
+                                  (normalB body)
+                                  []
+                          ]
+       , -- Define the toConstr method
+         do x <- newName "x"
+            let mkSel (c, n, _, _) e = match (conP c $ replicate n wildP)
+                                             (normalB e)
+                                             []
+                body = caseE (varE x) (zipWith mkSel cons constrExps)
+            funD 'toConstr [ clause [wildP, varP x]
+                                    (normalB body)
+                                    []
+                           ]
+       , -- Define the dataTypeOf method
+         funD 'dataTypeOf [ clause [wildP, wildP]
+                                   (normalB $ varE theDataTypeName)
+                                   []
+                          ]
+       ]
+     ])
+ where notTyVar (VarT _) = False
+       notTyVar _        = True
+       types = [ t | (_, _, _, ts) <- cons, t <- ts, notTyVar t ]
 
-{-         paramNames = take nParam $ map (('a' :) . show) [0..]
-         typeQParams = map (\nm -> varT (mkName nm)) paramNames-}
-         myType = foldl AppT (ConT name) typeParams
-         dataCxt typ = conT ''Data `appT` varT (mkName "ctx") `appT` return typ
-         satCxt typ = conT ''Sat `appT` (varT (mkName "ctx") `appT` return typ)
-         dataCxtTypes = nub (typeParams ++ types)
-         satCxtTypes = nub (myType : types)
-         context = cxt (map dataCxt dataCxtTypes ++ map satCxt satCxtTypes)
-
-         lowCaseName = map toLower nameStr
-         nameStr = nameBase name
-         theDataTypeNameBase = lowCaseName ++ "DataType"
-         theDataTypeName = mkName theDataTypeNameBase
-         -- Creates dataTypeDec of the form:
-         -- <name>DataType = mkDataType <name> [<constructors]
-         dataTypeSig = sigD theDataTypeName [t| DataType |]
-         dataTypeDec = funD theDataTypeName
-                       [clause []
-                        (normalB
-                         [| mkDataType nameStr $(listE (conVarExps)) |]) [] ]
-
-         -- conVarExps is a [ExpQ]. Each ExpQ is a variable expression
-         -- of form varE (mkName <con>Constr)
-         numCons = length cons
-         constrNames =
-           take numCons (map (\i -> theDataTypeNameBase ++ show i ++ "Constr") [1 :: Integer ..])
-         conNames = map (nameBase . fst) cons
-         conVarExps = map (varE . mkName) constrNames
-         conDecs = concat conDecss
-         conDecss = zipWith3 mkConstrDec constrNames conNames fieldNames
-          where
-           mkConstrDec decNm conNm fieldNm =
-             let n = mkName decNm in
-             [ sigD n [t| Constr |],
-               funD n [clause []
-                          (normalB
-                          [| mkConstr $(varE theDataTypeName)
-                                      conNm
-                                      fieldNm
-                                      $(fixity conNm)
-                           |])
-                          []]
-             ]
-         fixity (':':_)  = [| Infix |]
-         fixity _        = [| Prefix |]
-
-         mkSel (c,n) e = match  (conP c $ replicate n wildP)
-                         (normalB e) []
+       myType = foldl AppT (ConT name) typeParams
+       dataCxt typ = conT ''Data `appT` varT (mkName "ctx") `appT` return typ
+       satCxt typ = conT ''Sat `appT` (varT (mkName "ctx") `appT` return typ)
+       dataCxtTypes = nub (typeParams ++ types)
+       satCxtTypes = nub (myType : types)
+       context = cxt (map dataCxt dataCxtTypes ++ map satCxt satCxtTypes)
 #endif
 
 deriveMinimalData :: Name -> Int  -> Q [Dec]
 deriveMinimalData name nParam  = do
 #ifdef __HADDOCK__
- undefined
+    undefined
 #else
-   decs <- qOfDecs
-   let listOfDecQ = map return decs
-   sequence
-     [ instanceD context
-         (conT ''Data `appT` (foldl1 appT ([conT name] ++ typeQParams)))
-         listOfDecQ ]
+    decs <- qOfDecs
+    params <- replicateM nParam (newName "a")
+    let typeQParams = map varT params
+        context = cxt (map (\typ -> conT ''Data `appT` typ) typeQParams)
+        instanceType = foldl appT (conT name) typeQParams
+    inst <-instanceD context
+                     (conT ''Data `appT` instanceType)
+                     (map return decs)
+    return [inst]
 
-   where
-     paramNames = take nParam $ map (('a' :) . show) [0 :: Integer ..]
-     typeQParams = map (\nm -> varT (mkName nm)) paramNames
-     context = cxt (map (\typ -> conT ''Data `appT` typ) typeQParams)
-     qOfDecs =
-       [d| gunfold _ _ _ = error ("gunfold not defined")
-           toConstr x    = error ("toConstr not defined for " ++
-                              show (typeOf x))
-           dataTypeOf x = error ("dataTypeOf not implemented for " ++
-                            show (typeOf x))
-           gfoldl _ z x = z x
-        |]
+ where qOfDecs =
+           [d| gunfold _ _ _ = error "gunfold not defined"
+               toConstr x    = error ("toConstr not defined for " ++
+                                  show (typeOf x))
+               dataTypeOf x = error ("dataTypeOf not implemented for " ++
+                                show (typeOf x))
+               gfoldl _ z x = z x
+             |]
 #endif
 
 {- instance Data NameSet where
@@ -213,62 +218,51 @@ deriveMinimalData name nParam  = do
    dataTypeOf x = error ("dataTypeOf not implemented for " ++ show (typeOf x))
    gfoldl f z x = z x -}
 
-typeInfo :: Dec -> Q (Name, [Name], [(Name, Int)], [(Name, [(Maybe Name, Type)])])
-typeInfo d =
-        case d of
-           DataD _ n ps cs _ ->
-            return $ (simpleName n, ps, map conA cs, map termA cs)
-           NewtypeD _ n ps c _ ->
-            return $ (simpleName n, ps, [conA c], [termA c])
-           _ -> error ("derive: not a data type declaration: " ++ show d)
-
-     where
-        termA (NormalC c xs)        = (c, map (\x -> (Nothing, snd x)) xs)
-        termA (RecC c xs)           = (c, map (\(n, _, t) -> (Just $ simpleName n, t)) xs)
-        termA (InfixC t1 c t2)      = (c, [(Nothing, snd t1), (Nothing, snd t2)])
-        termA (ForallC _ _ c)       = termA c
-
-        conA (NormalC c xs)         = (c, length xs)
-        conA (RecC c xs)            = (c, length xs)
-        conA (InfixC _ c _)         = (c, 2)
-        conA (ForallC _ _ c)        = conA c
-
-simpleName :: Name -> Name
-simpleName nm =
-   let s = nameBase nm
-   in case dropWhile (/=':') s of
-        []          -> mkName s
-        _:[]        -> mkName s
-        _:t         -> mkName t
+typeInfo :: Dec
+         -> Q (Name,            -- Name of the datatype
+               [Name],          -- Names of the type parameters
+               [Constructor])   -- The constructors
+typeInfo d
+ = case d of
+   DataD    _ n ps cs _ -> return (n, ps, map conA cs)
+   NewtypeD _ n ps c  _ -> return (n, ps, [conA c])
+   _ -> error ("derive: not a data type declaration: " ++ show d)
+ where conA (NormalC c xs)   = (c, length xs, Nothing, map snd xs)
+       conA (InfixC x1 c x2) = conA (NormalC c [x1, x2])
+       conA (ForallC _ _ c)  = conA c
+       conA (RecC c xs)      = let getField (n, _, _) = n
+                                   getType  (_, _, t) = t
+                                   fields = map getField xs
+                                   types  = map getType xs
+                               in (c, length xs, Just fields, types)
 
 --
 -- | Derives the Data and Typeable instances for a single given data type.
 --
 deriveOne :: Name -> Q [Dec]
 deriveOne n =
-  do    info' <- reify n
-        case info' of
-           TyConI d -> deriveOneDec d
-           _ -> error ("derive: can't be used on anything but a type " ++
-                      "constructor of an algebraic data type")
+ do info <- reify n
+    case info of
+        TyConI d -> deriveOneDec d
+        _ -> error ("derive: can't be used on anything but a type " ++
+                    "constructor of an algebraic data type")
 
 deriveOneDec :: Dec -> Q [Dec]
 deriveOneDec dec =
-  do (name, param, ca, terms) <- typeInfo dec
-     t <- deriveTypeablePrim name (length param)
-     d <- deriveDataPrim name (map VarT param) ca terms
-     return (t ++ d)
+ do (name, param, cs) <- typeInfo dec
+    t <- deriveTypeablePrim name (length param)
+    d <- deriveDataPrim name (map VarT param) cs
+    return (t ++ d)
 
 deriveOneData :: Name -> Q [Dec]
 deriveOneData n =
-  do    info' <- reify n
-        case info' of
-           TyConI i -> do
-             (name, param, ca, terms) <- typeInfo i
-             d <- deriveDataPrim name (map VarT param) ca terms
-             return d
-           _ -> error ("derive: can't be used on anything but a type " ++
-                      "constructor of an algebraic data type")
+ do info <- reify n
+    case info of
+        TyConI i -> do
+            (name, param, cs) <- typeInfo i
+            deriveDataPrim name (map VarT param) cs
+        _ -> error ("derive: can't be used on anything but a type " ++
+                    "constructor of an algebraic data type")
 
 
 --
@@ -311,14 +305,13 @@ deriveTypeable names = do
 
 deriveOneTypeable :: Name -> Q [Dec]
 deriveOneTypeable n =
-  do    info' <- reify n
-        case info' of
-           TyConI i -> do
-             (name, param, _, _) <- typeInfo i
-             t <- deriveTypeablePrim name (length param)
-             return t
-           _ -> error ("derive: can't be used on anything but a type " ++
-                       "constructor of an algebraic data type")
+ do info <- reify n
+    case info of
+        TyConI i -> do
+             (name, param, _) <- typeInfo i
+             deriveTypeablePrim name (length param)
+        _ -> error ("derive: can't be used on anything but a type " ++
+                    "constructor of an algebraic data type")
 
 
 --
@@ -340,15 +333,15 @@ deriveOneTypeable n =
 --   define you're own Data and Typeable instances.
 deriveMinimalOne :: Name -> Q [Dec]
 deriveMinimalOne n =
-  do    info' <- reify n
-        case info' of
-           TyConI i -> do
-            (name, param, _, _) <- typeInfo i
+ do info <- reify n
+    case info of
+        TyConI i -> do
+            (name, param, _) <- typeInfo i
             t <- deriveTypeablePrim name (length param)
             d <- deriveMinimalData name (length param)
-            return $ t ++ d
-           _ -> error ("deriveMinimal: can't be used on anything but a " ++
-                       "type constructor of an algebraic data type")
+            return (t ++ d)
+        _ -> error ("deriveMinimal: can't be used on anything but a " ++
+                    "type constructor of an algebraic data type")
 
 
 deriveMinimal :: [Name] -> Q [Dec]
