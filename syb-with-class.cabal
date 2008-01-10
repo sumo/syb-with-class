@@ -13,6 +13,7 @@ Synopsis:           Scrap Your Boilerplate With Class
 Description:
     Classes, and Template Haskell code to generate instances, for the
     Scrap Your Boilerplate With Class system.
+    You can get it: $ darcs get http://happs.org/HAppS/syb-with-class
 Category:           Data
 Tested-With:        GHC==6.6, GHC==6.8.1
 Build-Depends:      base, template-haskell, bytestring, array
@@ -25,4 +26,3 @@ Extensions: UndecidableInstances, OverlappingInstances, Rank2Types,
             EmptyDataDecls, TemplateHaskell, FlexibleInstances, CPP,
             KindSignatures, MultiParamTypeClasses
 GHC-Options: -Wall -Werror
-
