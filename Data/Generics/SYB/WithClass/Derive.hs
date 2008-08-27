@@ -118,7 +118,7 @@ deriveDataPrim name typeParams cons =
        --       => Data ctx DataType
        instanceD context (dataCxt myType)
        [ -- Define the gfoldl method
-         do f <- newName "f"
+         do f <- newName "_f"
             z <- newName "z"
             x <- newName "x"
             let -- Takes a pair (constructor name, number of type
@@ -136,7 +136,7 @@ deriveDataPrim name typeParams cons =
                                   []
                          ]
        , -- Define the gunfold method
-         do k <- newName "k"
+         do k <- newName "_k"
             z <- newName "z"
             c <- newName "c"
             let body = if null cons
