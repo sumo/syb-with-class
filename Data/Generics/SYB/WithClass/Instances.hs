@@ -21,7 +21,8 @@ import GHC.ForeignPtr        -- So we can give Data instance for ForeignPtr
 import GHC.Stable            -- So we can give Data instance for StablePtr
 import GHC.ST                -- So we can give Data instance for ST
 import GHC.Conc              -- So we can give Data instance for MVar & Co.
-
+import qualified Data.Map as M
+import qualified Data.Set as S
 ------------------------------------------------------------------------------
 --
 -- Instances of the Data class for Prelude-like types.
@@ -669,6 +670,54 @@ instance (Sat (ctx [b]), Sat (ctx (Array a b)), Typeable a, Data ctx b, Data ctx
   toConstr _ _   = error "toConstr"
   gunfold _ _ _  = error "gunfold Array"
   dataTypeOf _ _ = mkNorepType "Data.Array.Array"
+
+------------------------------------------------------------------------------
+
+
+emptyMapConstr :: Constr
+emptyMapConstr     = mkConstr mapDataType "empty"  [] Prefix
+insertMapConstr :: Constr
+insertMapConstr    = mkConstr mapDataType "insert" [] Prefix
+mapDataType :: DataType
+mapDataType = mkDataType "Data.Map.Map" [emptyMapConstr,insertMapConstr]
+
+instance (Sat (ctx (M.Map a b)), Data ctx a, Data ctx b, Ord a) =>
+          Data ctx (M.Map a b) where
+  gfoldl _ f z m = case M.minViewWithKey m of
+                     Nothing -> z M.empty
+                     Just ((k,a),m') -> z M.insert `f` k `f` a `f` m' 
+  toConstr _ m | M.size m == 0 = emptyMapConstr
+               | otherwise     = insertMapConstr
+  gunfold _ k z c = case constrIndex c of
+                      1 -> z M.empty
+                      2 -> k (k (k (z M.insert)))
+                      _ -> error "gunfold Map"
+  dataTypeOf _ _ = mapDataType
+  dataCast2 _ f  = gcast2 f
+
+------------------------------------------------------------------------------
+
+
+emptySetConstr :: Constr
+emptySetConstr     = mkConstr mapDataType "empty"  [] Prefix
+insertSetConstr :: Constr
+insertSetConstr    = mkConstr mapDataType "insert" [] Prefix
+setDataType :: DataType
+setDataType = mkDataType "Data.Set.Set" [emptySetConstr,insertSetConstr]
+
+instance (Sat (ctx (S.Set a)), Data ctx a, Ord a) =>
+          Data ctx (S.Set a ) where
+  gfoldl _ f z s = case S.minView s of
+                     Nothing -> z S.empty
+                     Just (a,s') -> z S.insert `f` a `f` s' 
+  toConstr _ m | S.size m == 0 = emptySetConstr
+               | otherwise     = insertSetConstr
+  gunfold _ k z c = case constrIndex c of
+                      1 -> z S.empty
+                      2 -> k (k (z S.insert))
+                      _ -> error "gunfold Set"
+  dataTypeOf _ _ = setDataType
+  dataCast1 _ f  = gcast1 f
 
 ------------------------------------------------------------------------------
 
