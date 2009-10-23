@@ -18,14 +18,14 @@ Description:
 Category:           Data
 Tested-With:        GHC==6.8.3, GHC==6.10.1
 Build-Type:         Simple
-Cabal-Version:      >= 1.6
+Cabal-Version:      >= 1.2
 
 source-repository head
   type:     darcs
   location: http://patch-tag.com/publicrepos/syb-with-class
 
 Library 
-    Build-Depends:      base >= 3 && < 5, template-haskell, bytestring, array, containers
+    Build-Depends:      base >= 3 && < 5, template-haskell >= 2.4 && < 2.5, bytestring, array, containers
     Exposed-modules:
         Data.Generics.SYB.WithClass.Basics
         Data.Generics.SYB.WithClass.Context

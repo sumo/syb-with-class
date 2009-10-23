@@ -181,10 +181,11 @@ deriveDataPrim name typeParams cons =
 
        myType = foldl AppT (ConT name) typeParams
        dataCxt typ = conT ''Data `appT` varT (mkName "ctx") `appT` return typ
-       satCxt typ = conT ''Sat `appT` (varT (mkName "ctx") `appT` return typ)
+       dataCxt' typ = return $ ClassP ''Data [VarT (mkName "ctx"), typ]
+       satCxt typ = return $ ClassP ''Sat [VarT (mkName "ctx") `AppT` typ]
        dataCxtTypes = nub (typeParams ++ types)
        satCxtTypes = nub (myType : types)
-       context = cxt (map dataCxt dataCxtTypes ++ map satCxt satCxtTypes)
+       context = cxt (map dataCxt' dataCxtTypes ++ map satCxt satCxtTypes)
 #endif
 
 deriveMinimalData :: Name -> Int  -> Q [Dec]
@@ -195,7 +196,7 @@ deriveMinimalData name nParam  = do
     decs <- qOfDecs
     params <- replicateM nParam (newName "a")
     let typeQParams = map varT params
-        context = cxt (map (\typ -> conT ''Data `appT` typ) typeQParams)
+        context = cxt (map (\typ -> classP ''Data [typ]) typeQParams)
         instanceType = foldl appT (conT name) typeQParams
     inst <-instanceD context
                      (conT ''Data `appT` instanceType)
@@ -224,8 +225,8 @@ typeInfo :: Dec
                [Constructor])   -- The constructors
 typeInfo d
  = case d of
-   DataD    _ n ps cs _ -> return (n, ps, map conA cs)
-   NewtypeD _ n ps c  _ -> return (n, ps, [conA c])
+   DataD    _ n ps cs _ -> return (n, map varName ps, map conA cs)
+   NewtypeD _ n ps c  _ -> return (n, map varName ps, [conA c])
    _ -> error ("derive: not a data type declaration: " ++ show d)
  where conA (NormalC c xs)   = (c, length xs, Nothing, map snd xs)
        conA (InfixC x1 c x2) = conA (NormalC c [x1, x2])
@@ -235,6 +236,8 @@ typeInfo d
                                    fields = map getField xs
                                    types  = map getType xs
                                in (c, length xs, Just fields, types)
+       varName (PlainTV n) = n
+       varName (KindedTV n _) = n
 
 --
 -- | Derives the Data and Typeable instances for a single given data type.
