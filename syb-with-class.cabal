@@ -22,7 +22,7 @@ Cabal-Version:      >= 1.2
 
 source-repository head
   type:     darcs
-  location: http://patch-tag.com/publicrepos/syb-with-class
+  location: http://patch-tag.com/r/Saizan/syb-with-class/pullrepo
 
 Library 
     Build-Depends:      base >= 3 && < 5, template-haskell >= 2.4 && < 2.5, bytestring, array, containers
