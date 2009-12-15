@@ -18,7 +18,7 @@ Description:
 Category:           Data
 Tested-With:        GHC==6.12.1
 Build-Type:         Simple
-Cabal-Version:      >= 1.2
+Cabal-Version:      >= 1.6
 
 source-repository head
   type:     darcs
