@@ -23,7 +23,6 @@ module Data.Generics.SYB.WithClass.Derive where
 import Language.Haskell.TH
 import Data.List
 import Control.Monad
-import Data.Maybe
 import Data.Generics.SYB.WithClass.Basics
 
 --

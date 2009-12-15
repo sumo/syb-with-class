@@ -12,18 +12,19 @@ import Data.Generics.SYB.WithClass.Derive
 import Data.Array
 import Data.ByteString.Char8 (ByteString)
 import qualified Data.ByteString.Lazy as L (ByteString)
-import Data.Typeable
 import Data.Int              -- So we can give Data instance for Int8, ...
 import Data.Word             -- So we can give Data instance for Word8, ...
 import GHC.Real( Ratio(..) ) -- So we can give Data instance for Ratio
-import GHC.IOBase            -- So we can give Data instance for IO, Handle
+import System.IO             -- So we can give Data instance for IO, Handle
 import GHC.Ptr               -- So we can give Data instance for Ptr
 import GHC.ForeignPtr        -- So we can give Data instance for ForeignPtr
 import GHC.Stable            -- So we can give Data instance for StablePtr
 import GHC.ST                -- So we can give Data instance for ST
-import GHC.Conc              -- So we can give Data instance for MVar & Co.
+import Data.IORef            -- So we can give Data instance for IORef
+import Control.Concurrent.MVar   -- So we can give Data instance for MVar & Co.
 import qualified Data.Map as M
 import qualified Data.Set as S
+
 ------------------------------------------------------------------------------
 --
 -- Instances of the Data class for Prelude-like types.
