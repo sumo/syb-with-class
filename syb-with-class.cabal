@@ -25,7 +25,7 @@ source-repository head
   location: http://patch-tag.com/r/Saizan/syb-with-class/
 
 Library 
-    Build-Depends:      base >= 3 && < 5, template-haskell >= 2.4 && < 2.6, bytestring, array, containers
+    Build-Depends:      base >= 3 && < 5, template-haskell >= 2.4 && < 2.7, bytestring, array, containers
     Exposed-modules:
         Data.Generics.SYB.WithClass.Basics
         Data.Generics.SYB.WithClass.Context

@@ -77,8 +77,8 @@ deriveDataPrim name typeParams cons =
 #ifdef __HADDOCK__
  undefined
 #else
- do theDataTypeName <- newName "dataType"
-    constrNames <- replicateM (length cons) $ newName "constr"
+ do theDataTypeName <- newName $ "dataType_sybwc_" ++ show name
+    constrNames <- mapM (\(conName,_,_,_) -> newName $ "constr_sybwc_" ++ show conName) cons
     let constrExps = map varE constrNames
 
     let mkConstrDec :: Name -> Constructor -> Q [Dec]
