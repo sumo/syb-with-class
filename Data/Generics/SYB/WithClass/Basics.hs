@@ -18,7 +18,12 @@ module Data.Generics.SYB.WithClass.Basics (
 
 ) where
 
+#if MIN_VERSION_base(4,7,0)
+import Data.Typeable hiding (Proxy)
+#else
 import Data.Typeable
+#endif
+
 import Data.Generics.SYB.WithClass.Context
 
 #ifdef __HADDOCK__

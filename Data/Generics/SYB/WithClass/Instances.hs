@@ -1,6 +1,9 @@
 {-# LANGUAGE TemplateHaskell, FlexibleInstances,
              UndecidableInstances, OverlappingInstances, CPP,
              MultiParamTypeClasses #-}
+#if MIN_VERSION_base(4,7,0)
+{-# LANGUAGE StandaloneDeriving, DeriveDataTypeable #-}
+#endif
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 -- This is a module full of orphans, so don't warn about them
 
@@ -540,8 +543,12 @@ instance Sat (ctx TyCon) =>
 
 
 -- INSTANCE_TYPEABLE0(DataType,dataTypeTc,"DataType")
+#if MIN_VERSION_base(4,7,0)
+deriving instance Typeable DataType
+#else
 #ifndef __HADDOCK__
 $(deriveTypeable [''DataType])
+#endif
 #endif
 
 instance Sat (ctx DataType) =>

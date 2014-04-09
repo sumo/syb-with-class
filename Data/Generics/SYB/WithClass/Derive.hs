@@ -39,7 +39,11 @@ deriveTypeablePrim name nParam
                           Just m -> m ++ "."
                           Nothing -> ""
            typeString = moduleString ++ nameBase name
+#if MIN_VERSION_base(4,7,0)
+           body = [| mkTyConApp (mkTyCon3 $(litE $ stringL typeString)) [] |]
+#else
            body = [| mkTyConApp (mkTyCon $(litE $ stringL typeString)) [] |]
+#endif
            method = funD methodName [clause [wildP] (normalB body) []]
        in sequence [ instanceD (return [])
                                (conT className `appT` conT name)
