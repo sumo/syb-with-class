@@ -69,6 +69,11 @@ type Constructor = (Name,         -- Name of the constructor
                     Maybe [Name], -- Name of the field selector, if any
                     [Type])       -- Type of the constructor argument
 
+escape :: String -> String
+escape "" = ""
+escape ('.' : more) = '_' : escape more
+escape (c : more) = c : escape more
+
 -- | Takes a name of a algebraic data type, the number of parameters it
 --   has and a list of constructor pairs.  Each one of these constructor
 --   pairs consists of a constructor name and the number of type
@@ -81,8 +86,8 @@ deriveDataPrim name typeParams cons =
 #ifdef __HADDOCK__
  undefined
 #else
- do theDataTypeName <- newName $ "dataType_sybwc_" ++ show name
-    constrNames <- mapM (\(conName,_,_,_) -> newName $ "constr_sybwc_" ++ show conName) cons
+ do theDataTypeName <- newName $ "dataType_sybwc_" ++ escape (show name)
+    constrNames <- mapM (\(conName,_,_,_) -> newName $ "constr_sybwc_" ++ escape (show conName)) cons
     let constrExps = map varE constrNames
 
     let mkConstrDec :: Name -> Constructor -> Q [Dec]
