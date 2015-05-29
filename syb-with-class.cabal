@@ -21,8 +21,8 @@ Build-Type:         Simple
 Cabal-Version:      >= 1.6
 
 source-repository head
-  type:     darcs
-  location: http://patch-tag.com/r/Saizan/syb-with-class/
+  type:     git
+  location: https://github.com/Saizan/syb-with-class
 
 Library 
     Build-Depends:      base >= 3 && < 5, template-haskell >= 2.4 && < 2.11, bytestring, array, containers
