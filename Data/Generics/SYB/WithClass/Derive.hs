@@ -186,8 +186,13 @@ deriveDataPrim name typeParams cons =
 
        myType = foldl AppT (ConT name) typeParams
        dataCxt typ = conT ''Data `appT` varT (mkName "ctx") `appT` return typ
+#if MIN_VERSION_template_haskell(2,10,0)
+       dataCxt' typ = (conT ''Data `appT` varT (mkName "ctx")) `appT` return typ
+       satCxt typ = conT ''Sat `appT` (varT (mkName "ctx") `appT` return typ)
+#else
        dataCxt' typ = return $ ClassP ''Data [VarT (mkName "ctx"), typ]
        satCxt typ = return $ ClassP ''Sat [VarT (mkName "ctx") `AppT` typ]
+#endif
        dataCxtTypes = filter (\x -> applied x /= ConT name) $ nub (typeParams ++ types)
        satCxtTypes = nub (myType : types)
        context = cxt (map dataCxt' dataCxtTypes ++ map satCxt satCxtTypes)
@@ -201,7 +206,11 @@ deriveMinimalData name nParam  = do
     decs <- qOfDecs
     params <- replicateM nParam (newName "a")
     let typeQParams = map varT params
+#if MIN_VERSION_template_haskell(2,10,0)
+        context = cxt (map (appT (conT ''Data)) typeQParams)
+#else
         context = cxt (map (\typ -> classP ''Data [typ]) typeQParams)
+#endif
         instanceType = foldl appT (conT name) typeQParams
     inst <-instanceD context
                      (conT ''Data `appT` instanceType)
