@@ -14,7 +14,7 @@ Bug-Reports: http://code.google.com/p/syb-with-class/issues/list
 Synopsis:           Scrap Your Boilerplate With Class
 Description:
     Classes, and Template Haskell code to generate instances, for the
-    Scrap Your Boilerplate With Class system.    
+    Scrap Your Boilerplate With Class system.
 Category:           Data
 Tested-With:        GHC==7.2.1
 Build-Type:         Simple
@@ -24,8 +24,8 @@ source-repository head
   type:     git
   location: https://github.com/Saizan/syb-with-class
 
-Library 
-    Build-Depends:      base >= 3 && < 5, template-haskell >= 2.4 && < 2.11, bytestring, array, containers
+Library
+    Build-Depends:      base >= 3 && < 5, template-haskell >= 2.4 && < 2.12, bytestring, array, containers
     Exposed-modules:
         Data.Generics.SYB.WithClass.Basics
         Data.Generics.SYB.WithClass.Context

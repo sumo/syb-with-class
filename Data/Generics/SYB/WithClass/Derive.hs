@@ -244,8 +244,13 @@ typeInfo :: Dec
                [Constructor])   -- The constructors
 typeInfo d
  = case d of
+#if MIN_VERSION_template_haskell(2,11,0)
+   DataD    _ n ps _ cs _ -> return (n, map varName ps, map conA cs)
+   NewtypeD _ n ps _ c  _ -> return (n, map varName ps, [conA c])
+#else
    DataD    _ n ps cs _ -> return (n, map varName ps, map conA cs)
    NewtypeD _ n ps c  _ -> return (n, map varName ps, [conA c])
+#endif
    _ -> error ("derive: not a data type declaration: " ++ show d)
  where conA (NormalC c xs)   = (c, length xs, Nothing, map snd xs)
        conA (InfixC x1 c x2) = conA (NormalC c [x1, x2])
