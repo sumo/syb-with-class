@@ -1,7 +1,7 @@
 {-# LANGUAGE UndecidableInstances, OverlappingInstances, Rank2Types,
     CPP, KindSignatures, MultiParamTypeClasses, EmptyDataDecls #-}
 
-{-
+{- |
 
 (C) 2004--2005 Ralf Laemmel, Simon D. Foster
 
@@ -33,7 +33,7 @@ data Proxy (a :: * -> *)
 #endif
 
 ------------------------------------------------------------------------------
--- The ingenious Data class
+-- * The ingenious Data class
 
 class (Typeable a, Sat (ctx a)) => Data ctx a
 
@@ -83,12 +83,12 @@ class (Typeable a, Sat (ctx a)) => Data ctx a
 
 ------------------------------------------------------------------------------
 
--- Generic transformations
+-- * Generic transformations
 
 type GenericT ctx = forall a. Data ctx a => a -> a
 
 
--- Generic map for transformations
+-- | Generic map for transformations
 
 gmapT :: Proxy ctx -> GenericT ctx -> GenericT ctx
 
@@ -97,18 +97,18 @@ gmapT ctx f x = unID (gfoldl ctx k ID x)
     k (ID g) y = ID (g (f y))
 
 
--- The identity type constructor
+-- | The identity type constructor
 
 newtype ID x = ID { unID :: x }
 
 
 ------------------------------------------------------------------------------
 
--- Generic monadic transformations
+-- | Generic monadic transformations
 
 type GenericM m ctx = forall a. Data ctx a => a -> m a
 
--- Generic map for monadic transformations
+-- | Generic map for monadic transformations
 
 gmapM :: Monad m => Proxy ctx -> GenericM m ctx -> GenericM m ctx
 gmapM ctx f = gfoldl ctx k return
@@ -119,12 +119,12 @@ gmapM ctx f = gfoldl ctx k return
 
 ------------------------------------------------------------------------------
 
--- Generic queries
+-- * Generic queries
 
 type GenericQ ctx r = forall a. Data ctx a => a -> r
 
 
--- Map for queries
+-- | Map for queries
 
 gmapQ :: Proxy ctx -> GenericQ ctx r -> GenericQ ctx [r]
 gmapQ ctx f = gmapQr ctx (:) [] f
@@ -140,14 +140,14 @@ gmapQr ctx o r f x = unQr (gfoldl ctx k (const (Qr id)) x) r
   where
     k (Qr g) y = Qr (\s -> g (f y `o` s))
 
--- The type constructor used in definition of gmapQr
+-- | The type constructor used in definition of gmapQr
 newtype Qr r a = Qr { unQr  :: r -> r }
 
 
 
 ------------------------------------------------------------------------------
 --
--- Generic unfolding
+-- * Generic unfolding
 --
 ------------------------------------------------------------------------------
 
@@ -185,15 +185,15 @@ fromConstrM ctx f = gunfold ctx k z
 
 ------------------------------------------------------------------------------
 --
--- Datatype and constructor representations
+-- * Datatype and constructor representations
 --
 ------------------------------------------------------------------------------
 
 
 --
 -- | Representation of datatypes.
--- | A package of constructor representations with names of type and module.
--- | The list of constructors could be an array, a balanced tree, or others.
+--   A package of constructor representations with names of type and module.
+--   The list of constructors could be an array, a balanced tree, or others.
 --
 data DataType = DataType
                         { tycon   :: String
@@ -256,7 +256,7 @@ data Fixity = Prefix
 
 ------------------------------------------------------------------------------
 --
--- Observers for datatype representations
+-- * Observers for datatype representations
 --
 ------------------------------------------------------------------------------
 
@@ -296,7 +296,7 @@ repConstr dt cr =
 
 ------------------------------------------------------------------------------
 --
--- Representations of algebraic data types
+-- * Representations of algebraic data types
 --
 ------------------------------------------------------------------------------
 
@@ -344,7 +344,7 @@ constrFixity = confixity
 
 ------------------------------------------------------------------------------
 --
--- From strings to constr's and vice versa: all data types
+-- * From strings to constr's and vice versa: all data types
 --
 ------------------------------------------------------------------------------
 
@@ -381,7 +381,7 @@ readConstr dt str =
 
 ------------------------------------------------------------------------------
 --
--- Convenience funtions: algebraic data types
+-- * Convenience funtions: algebraic data types
 --
 ------------------------------------------------------------------------------
 
@@ -417,7 +417,7 @@ maxConstrIndex dt = case dataTypeRep dt of
 
 ------------------------------------------------------------------------------
 --
--- Representation of primitive types
+-- * Representation of primitive types
 --
 ------------------------------------------------------------------------------
 
@@ -445,7 +445,7 @@ mkPrimType dr str = DataType
                         }
 
 
--- Makes a constructor for primitive types
+-- | Makes a constructor for primitive types
 mkPrimCon :: DataType -> String -> ConstrRep -> Constr
 mkPrimCon dt str cr = Constr
                         { datatype  = dt
@@ -456,18 +456,21 @@ mkPrimCon dt str cr = Constr
                         }
 
 
+-- | Makes a constructor for an Int
 mkIntConstr :: DataType -> Integer -> Constr
 mkIntConstr dt i = case datarep dt of
                   IntRep -> mkPrimCon dt (show i) (IntConstr i)
                   _ -> error "mkIntConstr"
 
 
+-- | Makes a constructor for a Float
 mkFloatConstr :: DataType -> Double -> Constr
 mkFloatConstr dt f = case datarep dt of
                     FloatRep -> mkPrimCon dt (show f) (FloatConstr f)
                     _ -> error "mkFloatConstr"
 
 
+-- | Makes a constructor for a String
 mkStringConstr :: DataType -> String -> Constr
 mkStringConstr dt str = case datarep dt of
                        StringRep -> mkPrimCon dt str (StringConstr str)
@@ -476,7 +479,7 @@ mkStringConstr dt str = case datarep dt of
 
 ------------------------------------------------------------------------------
 --
--- Non-representations for non-presentable types
+-- * Non-representations for non-presentable types
 --
 ------------------------------------------------------------------------------
 
