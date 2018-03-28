@@ -55,6 +55,8 @@ deriveTypeablePrim name nParam
        index (x:_) 0 = Just x
        index (_:xs) n = index xs (n - 1)
        names = [(''Typeable, 'typeOf),
+#if MIN_VERSION_base(4,11,0)
+#else
                 (''Typeable1, 'typeOf1),
                 (''Typeable2, 'typeOf2),
                 (''Typeable3, 'typeOf3),
@@ -62,6 +64,7 @@ deriveTypeablePrim name nParam
                 (''Typeable5, 'typeOf5),
                 (''Typeable6, 'typeOf6),
                 (''Typeable7, 'typeOf7)]
+#endif
 #endif
 
 type Constructor = (Name,         -- Name of the constructor
