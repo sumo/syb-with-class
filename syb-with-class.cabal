@@ -24,6 +24,7 @@ source-repository head
   location: https://github.com/Happstack/syb-with-class
 
 Library
+    Default-Language: Haskell2010
     Build-Depends:      base >= 3 && < 5, template-haskell >= 2.4 && < 2.15, bytestring, array, containers
     Exposed-modules:
         Data.Generics.SYB.WithClass.Basics
@@ -31,8 +32,16 @@ Library
         Data.Generics.SYB.WithClass.Derive
         Data.Generics.SYB.WithClass.Instances
 
-    Extensions: UndecidableInstances, OverlappingInstances, Rank2Types,
+    Default-Extensions: UndecidableInstances, OverlappingInstances, Rank2Types,
             EmptyDataDecls, TemplateHaskell, FlexibleInstances, CPP,
             KindSignatures, MultiParamTypeClasses
 
     GHC-Options: -Wall
+
+test-suite syb-with-class-test
+    Default-Language: Haskell2010
+    Type: exitcode-stdio-1.0
+    Hs-Source-Dirs: tests
+    GHC-Options: -Wall -O
+    Main-Is: Test.hs
+    Build-Depends: base, HUnit, syb-with-class

@@ -6,8 +6,7 @@
 ------------------------------------------------------------------------------
 
 {-# LANGUAGE TemplateHaskell, FlexibleInstances,
-             UndecidableInstances, OverlappingInstances, CPP,
-             MultiParamTypeClasses #-}
+             UndecidableInstances, CPP, MultiParamTypeClasses #-}
 #if MIN_VERSION_base(4,7,0)
 {-# LANGUAGE StandaloneDeriving, DeriveDataTypeable #-}
 #endif
