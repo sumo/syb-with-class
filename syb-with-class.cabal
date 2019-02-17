@@ -45,3 +45,4 @@ test-suite syb-with-class-test
     GHC-Options: -Wall
     Main-Is: Test.hs
     Build-Depends: base, HUnit, syb-with-class
+    Default-Extensions: OverlappingInstances
