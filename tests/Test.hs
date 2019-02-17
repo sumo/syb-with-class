@@ -38,5 +38,5 @@ main = do
                            actual = (gsize ['a', 'b'], gsize 'x') in
                        TestCase (assertEqual "sample" expected actual))
   case counts of
-    Counts {errors = 0, failures = 0} -> pure ()
+    Counts {errors = 0, failures = 0} -> return ()
     _ -> error (showCounts counts)
