@@ -54,14 +54,18 @@ deriveTypeablePrim name nParam
  where index [] _ = Nothing
        index (x:_) 0 = Just x
        index (_:xs) n = index xs (n - 1)
-       names = [(''Typeable, 'typeOf),
-                (''Typeable1, 'typeOf1),
-                (''Typeable2, 'typeOf2),
-                (''Typeable3, 'typeOf3),
-                (''Typeable4, 'typeOf4),
-                (''Typeable5, 'typeOf5),
-                (''Typeable6, 'typeOf6),
-                (''Typeable7, 'typeOf7)]
+       names = [ (''Typeable, 'typeOf)
+#if MIN_VERSION_base(4,11,0)
+#else
+               , (''Typeable1, 'typeOf1)
+               , (''Typeable2, 'typeOf2)
+               , (''Typeable3, 'typeOf3)
+               , (''Typeable4, 'typeOf4)
+               , (''Typeable5, 'typeOf5)
+               , (''Typeable6, 'typeOf6)
+               , (''Typeable7, 'typeOf7)
+#endif
+               ]
 #endif
 
 type Constructor = (Name,         -- Name of the constructor

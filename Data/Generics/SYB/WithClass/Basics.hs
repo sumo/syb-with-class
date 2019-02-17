@@ -66,14 +66,22 @@ class (Typeable a, Sat (ctx a)) => Data ctx a
      dataTypeOf _ _ = undefined
 
      -- | Mediate types and unary type constructors
+#if MIN_VERSION_base(4,11,0)
+     dataCast1 :: Typeable t
+#else
      dataCast1 :: Typeable1 t
+#endif
                => Proxy ctx
                -> (forall b. Data ctx b => w (t b))
                -> Maybe (w a)
      dataCast1 _ _ = Nothing
 
      -- | Mediate types and binary type constructors
+#if MIN_VERSION_base(4,11,0)
+     dataCast2 :: Typeable t
+#else
      dataCast2 :: Typeable2 t
+#endif
                => Proxy ctx
                -> (forall b c. (Data ctx b, Data ctx c) => w (t b c))
                -> Maybe (w a)
