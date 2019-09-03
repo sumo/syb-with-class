@@ -1,6 +1,12 @@
+------------------------------------------------------------------------------
+--
+-- | Instances of the Data class for Prelude-like types.
+-- We define top-level definitions for representations.
+--
+------------------------------------------------------------------------------
+
 {-# LANGUAGE TemplateHaskell, FlexibleInstances,
-             UndecidableInstances, OverlappingInstances, CPP,
-             MultiParamTypeClasses #-}
+             UndecidableInstances, CPP, MultiParamTypeClasses #-}
 #if MIN_VERSION_base(4,7,0)
 {-# LANGUAGE StandaloneDeriving, DeriveDataTypeable #-}
 #endif
@@ -27,13 +33,6 @@ import Data.IORef            -- So we can give Data instance for IORef
 import Control.Concurrent.MVar   -- So we can give Data instance for MVar & Co.
 import qualified Data.Map as M
 import qualified Data.Set as S
-
-------------------------------------------------------------------------------
---
--- Instances of the Data class for Prelude-like types.
--- We define top-level definitions for representations.
---
-------------------------------------------------------------------------------
 
 
 falseConstr :: Constr

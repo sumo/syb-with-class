@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell, CPP #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
--- We can't warn about missing sigs as we have a group of decls in
+-- | We can't warn about missing sigs as we have a group of decls in
 -- quasi-quotes that we're going to put in a class instance
 
 --
@@ -236,11 +236,15 @@ deriveMinimalData name nParam  = do
              |]
 #endif
 
-{- instance Data NameSet where
+{- |
+   @@
+   instance Data NameSet where
    gunfold _ _ _ = error ("gunfold not implemented")
    toConstr x = error ("toConstr not implemented for " ++ show (typeOf x))
    dataTypeOf x = error ("dataTypeOf not implemented for " ++ show (typeOf x))
-   gfoldl f z x = z x -}
+   gfoldl f z x = z x
+   @@
+-}
 
 typeInfo :: Dec
          -> Q (Name,            -- Name of the datatype

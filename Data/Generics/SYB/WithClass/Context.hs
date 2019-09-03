@@ -1,6 +1,6 @@
-{-# LANGUAGE UndecidableInstances, OverlappingInstances, EmptyDataDecls #-}
+{-# LANGUAGE UndecidableInstances, EmptyDataDecls #-}
 
-{-
+{- |
 
 (C) 2004 Ralf Laemmel
 
@@ -16,7 +16,7 @@ where
 ------------------------------------------------------------------------------
 
 --
--- The Sat class from John Hughes' "Restricted Data Types in Haskell"
+-- | The Sat class from John Hughes' "Restricted Data Types in Haskell"
 --
 
 class Sat a
@@ -26,7 +26,7 @@ class Sat a
 
 ------------------------------------------------------------------------------
 
--- No context
+-- | No context
 
 data NoCtx a
 
@@ -38,7 +38,7 @@ instance Sat (NoCtx a) where dict = undefined
 
 ------------------------------------------------------------------------------
 
--- Pair context
+-- | Pair context
 
 data PairCtx l r a
    = PairCtx { leftCtx  :: l a
