@@ -1,5 +1,5 @@
 Name:               syb-with-class
-Version:            0.6.1.11
+Version:            0.6.1.12
 License:            BSD3
 License-file:       LICENSE
 Copyright:          2004 - 2008 The University of Glasgow, CWI,
@@ -15,7 +15,7 @@ Description:
     Classes, and Template Haskell code to generate instances, for the
     Scrap Your Boilerplate With Class system.
 Category:           Data
-Tested-With:        GHC == 7.6.3, GHC == 7.8.4, GHC == 7.10.2, GHC==8.0.1, GHC==8.2.1, GHC==8.4.3, GHC==8.6.3
+Tested-With:        GHC == 7.6.3, GHC == 7.8.4, GHC == 7.10.2, GHC==8.0.1, GHC==8.2.1, GHC==8.4.3, GHC==8.6.3, GHC==8.8.1
 Build-Type:         Simple
 Cabal-Version:      >= 1.10
 
@@ -25,7 +25,7 @@ source-repository head
 
 Library
     Default-Language: Haskell2010
-    Build-Depends:      base >= 3 && < 5, template-haskell >= 2.4 && < 2.15, bytestring, array, containers
+    Build-Depends:      base >= 3 && < 5, template-haskell >= 2.4 && < 2.16, bytestring, array, containers
     Exposed-modules:
         Data.Generics.SYB.WithClass.Basics
         Data.Generics.SYB.WithClass.Context
