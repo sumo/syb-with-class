@@ -5,7 +5,7 @@
 --
 ------------------------------------------------------------------------------
 
-{-# LANGUAGE TemplateHaskell, FlexibleInstances,
+{-# LANGUAGE TemplateHaskell, FlexibleContexts, FlexibleInstances,
              UndecidableInstances, CPP, MultiParamTypeClasses #-}
 #if MIN_VERSION_base(4,7,0)
 {-# LANGUAGE StandaloneDeriving, DeriveDataTypeable #-}
