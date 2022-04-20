@@ -268,9 +268,13 @@ typeInfo d
                                    fields = map getField xs
                                    types  = map getType xs
                                in (c, length xs, Just fields, types)
+#if MIN_VERSION_template_haskell(2,17,0)
+       varName (PlainTV n _) = n
+       varName (KindedTV n _ _) = n
+#else
        varName (PlainTV n) = n
        varName (KindedTV n _) = n
-
+#endif
 --
 -- | Derives the Data and Typeable instances for a single given data type.
 --
