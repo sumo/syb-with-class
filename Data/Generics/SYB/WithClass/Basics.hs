@@ -18,13 +18,10 @@ module Data.Generics.SYB.WithClass.Basics (
 
 ) where
 
-#if MIN_VERSION_base(4,7,0)
 import Data.Typeable hiding (Proxy)
-#else
-import Data.Typeable
-#endif
 
 import Data.Generics.SYB.WithClass.Context
+import Data.Maybe (listToMaybe)
 
 #ifdef __HADDOCK__
 data Proxy
@@ -382,9 +379,7 @@ readConstr dt str =
     -- Traverse list of algebraic datatype constructors
     idx :: [Constr] -> Maybe Constr
     idx cons = let fit = filter ((==) str . showConstr) cons
-                in if fit == []
-                     then Nothing
-                     else Just (head fit)
+                in listToMaybe fit
 
 
 ------------------------------------------------------------------------------
